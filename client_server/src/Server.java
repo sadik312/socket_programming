@@ -4,14 +4,15 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 
 public class Server {
 
     public static final int port = 9090;
     static String ip;
     final ServerSocket serverSocket = new ServerSocket(port);
-    Client coordinator = null;
-
+    String coordinator = null;
+    HashMap<String, String> members = new HashMap<String, String>();
 
     public Server() throws IOException {
         InetAddress localhost = InetAddress.getLocalHost();
@@ -31,7 +32,7 @@ public class Server {
 
     public void serverStart() throws IOException {
         while (true) {
-            System.out.println("server starting");
+            System.out.println("server started");
             Socket clientsocket = serverSocket.accept();
             System.out.println("Accepted connection from " + clientsocket);
 
@@ -51,12 +52,13 @@ public class Server {
     }
 
 
-    public void handleClient(Socket client){
-        checkFirst();
+    public void handleClient(String client){
+        //checkFirst();
+        //members.put(client.ip, coordinator)
 
     }
 
-    private void checkFirst(Client client){
+    private void checkFirst(String client){
         if(coordinator == null){
             //print fist client and new coordinator
             setCoordinator(client);
@@ -65,18 +67,18 @@ public class Server {
     }
 
 
-    private void setCoordinator(Client client){
+    private void setCoordinator(String client){
         coordinator = client;
     }
 
 
-    public Client getCoordinator(){
+    public String getCoordinator(){
         return coordinator;
     }
 
 
     public String getCoordinator(boolean ip){
-        return coordinator.ip;
+        return coordinator;
     }
 
 }
