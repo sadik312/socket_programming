@@ -1,85 +1,36 @@
+package com.company;
 
-
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.InetAddress;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Scanner;
 
 public class Server {
 
-    public static final int port = 9090;
-    static String ip;
-    final ServerSocket serverSocket = new ServerSocket(port);
-    Client coordinator = null;
 
 
-    public Server() throws IOException {
-        InetAddress localhost = InetAddress.getLocalHost();
-        ip = localhost.getHostAddress();
+    static boolean status = true;
+    //key=String, value=list[id, ip, port]
+    static HashMap<String, ArrayList<String>> client_information = new HashMap<String, ArrayList<String>>();
+    public static void main(String[] args) throws IOException, InterruptedException {
 
-
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public String getIp() {
-        return ip;
-    }
-
-
-    public void serverStart() throws IOException {
-        while (true) {
-            System.out.println("server starting");
-            Socket clientsocket = serverSocket.accept();
-            System.out.println("Accepted connection from " + clientsocket);
-
-
-            Thread t = new Thread() {
-                public void run(){
-                    handleClient(clientsocket);
-                }
-
-            };
-            t.start();
-        }
-
-
-
-
-    }
-
-
-    public void handleClient(Socket client){
-        checkFirst();
-
-    }
-
-    private void checkFirst(Client client){
-        if(coordinator == null){
-            //print fist client and new coordinator
-            setCoordinator(client);
+        ServerSocket listener = new ServerSocket(9090);
+        while(status){
+            System.out.println("[Server] Server waiting for client connection");
+            Socket client = listener.accept();
+            ClientHandler clientHandler = new ClientHandler(client);
+            Thread thread = new Thread(clientHandler);
+            thread.start();
+            thread.join();
 
         }
-    }
+        listener.close();
 
-
-    private void setCoordinator(Client client){
-        coordinator = client;
-    }
-
-
-    public Client getCoordinator(){
-        return coordinator;
-    }
-
-
-    public String getCoordinator(boolean ip){
-        return coordinator.ip;
     }
 
 }
-
-
-
