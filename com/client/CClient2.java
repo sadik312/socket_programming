@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.*;
 
 public class CClient2 {
@@ -12,7 +13,7 @@ public class CClient2 {
     private final String id;
     private final int port;
     private final String ip;
-    private boolean coordinator;
+    private boolean isCoordinator;
 
     private final Thread coordinatorCheck;
 
@@ -49,13 +50,13 @@ public class CClient2 {
         this.out = new DataOutputStream(socket.getOutputStream());
 
 
-        coordinatorCheck = new Thread( () -> {
+        this.coordinatorCheck = new Thread( () -> {
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            while(coordinator){
+            while(isCoordinator){
 
                 try {
                     Thread.sleep(5000);
@@ -68,7 +69,9 @@ public class CClient2 {
                 try {
                     out.write(sendPacket.bytePackage());
                     out.flush();
-                } catch (IOException e) {
+                } catch (SocketException s) {
+                    System.out.println("[Client] Connection to server disconnected");
+                }catch (IOException e){
                     e.printStackTrace();
                 }
 
@@ -76,6 +79,18 @@ public class CClient2 {
             }
         });
 
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public String getIp() {
+        return ip;
     }
 
 
@@ -161,7 +176,8 @@ public class CClient2 {
     //starting number of opcode hex is 8: Server to -> Client || if number 0 Client to -> Server
     private void instructions(byte opCode, Packet packet) throws IOException {
         switch (opCode) {
-            case (byte)0x82 -> addClient(packet);  //10000001
+            case (byte)0x81 -> System.out.println("[Server] Connection rejected as ID already used. Change ID.");
+            case (byte)0x82 -> addClient(packet);
             case (byte)0x83 -> removeClient(packet);
             case (byte)0x84 -> updateCoordinator(packet);
             case (byte)0x85 -> System.out.println("[Server] You are the first client");
@@ -175,15 +191,17 @@ public class CClient2 {
 
     private void setCoordinator(Packet packet) {
         byte[] data = packet.getData();
-        //The data[0] will be equals to 0 so we skip it [0, 1, -64, -88, 0, 27, 35, -125]
+        //The data[0] will be equals to 0 so we skip it: [0, 1, -64, -88, 0, 27, 35, -125]
         String id = String.valueOf(Byte.toUnsignedInt(data[1]));
         String ip = Byte.toUnsignedInt(data[2]) + "." + Byte.toUnsignedInt(data[3]) + "." +
                 Byte.toUnsignedInt(data[4]) + "." + Byte.toUnsignedInt(data[5]);
         String port = Integer.toString ((0xff00 & (data[6]<<8) ) | (255 & data[7]));
+
+        clientInformation.remove("coordinator");
         clientInformation.put("coordinator", new ArrayList<>(List.of(id, ip, port)));
 
         if(id.equals(this.id)){
-            this.coordinator = true;
+            this.isCoordinator = true;
             checkActive();
         }
 
@@ -193,12 +211,14 @@ public class CClient2 {
     private void message(Packet packet) {
     }
 
+    /*
     private void respondActive() throws IOException {
         Header header = new Header((byte)0x05);
         Packet packet = new Packet(header);
         out.write(packet.bytePackage());
         out.flush();
     }
+    */
 
     private void removeClient(Packet packet) {
         String id = String.valueOf(Byte.toUnsignedInt(packet.getData()[0]));
@@ -222,12 +242,17 @@ public class CClient2 {
         System.out.println("\n[Server] Client "+id+" added");
         System.out.println(clientInformation.get(id));
 
-
+        /*
         //Responding to accepting client
         Header header= new Header((byte)0x06, (byte)1);
         Packet sendPacket = new Packet(header, new byte[]{data[0]});
         out.write(packet.bytePackage());
         out.flush();
+        */
+    }
+
+    private void respondActive(){
+        //useless
     }
 
     private void acceptInitial(Packet packet){
@@ -267,9 +292,10 @@ public class CClient2 {
                 interruptedException.printStackTrace();
             }
         }
-        socket.close();
+
         in.close();
         out.close();
+        socket.close();
         System.out.println("Connection to Server closed");
     }
 
