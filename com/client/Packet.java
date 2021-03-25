@@ -1,4 +1,4 @@
-package com.client;
+package client;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -24,6 +24,8 @@ public class Packet {
     //for incoming using dataInputStream
     public Packet(byte[] incoming, DataInputStream in) throws IOException {
         this.header = new Header(incoming);
+        //System.out.println("OpCode received: " + Integer.toHexString(this.header.getOpcode()));
+        //System.out.println("length of the packet " + this.header.getLength());
         if(header.getLength() != 0){
             this.data = new byte[header.getLength()];
             in.read(data);
@@ -32,7 +34,7 @@ public class Packet {
         }
     }
 
-    //out going packages //combinig header and payload
+    //out going packages //combining header and payload
     public byte[] bytePackage() throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         out.write(header.buildHeader());

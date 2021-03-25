@@ -1,14 +1,15 @@
-package com.company;
+package company;
 
 
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import static com.company.Server.*;
 
+import static company.Server.*;
 
 public class ClientHandler2 implements Runnable{
 
@@ -16,7 +17,6 @@ public class ClientHandler2 implements Runnable{
     private final DataInputStream in;
     private final DataOutputStream out;
 
-    //private final Thread coordinatorChecker;
 
     private String coordinator = null;
     private boolean status = false;
@@ -27,31 +27,6 @@ public class ClientHandler2 implements Runnable{
         this.socket = client;
         this.in = new DataInputStream(client.getInputStream());
         this.out = new DataOutputStream(client.getOutputStream());
-            /*
-            this.coordinatorChecker = new Thread( () -> {
-                while(this.coordinator != null){
-                    Header header = new Header((byte)0x88);
-                    Packet sendPacket = new Packet(header);
-                    try {
-                        Thread.sleep(5000);
-                        out.write(sendPacket.bytePackage());
-
-                    } catch (SocketException broken) {
-
-                        try {
-                            assignCoordinator();
-                            setCoordinator();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                    }catch (InterruptedException | IOException interruptedException){
-                        interruptedException.printStackTrace();
-                    }
-                }
-            });
-
-             */
 
     }
     @Override
@@ -65,7 +40,8 @@ public class ClientHandler2 implements Runnable{
             instructions(packet.getHeader().getOpcode(), packet);
 
             //letting client know they are the first client if they are the first client
-            if(client_information.size()<=1){ firstClient();}
+            //System.out.println(client_information);
+            if(client_information.isEmpty()){ firstClient();}
 
             sendClient();
 
@@ -93,6 +69,8 @@ public class ClientHandler2 implements Runnable{
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println(client_information);
+        System.out.println("Terminating "+Thread.currentThread());
 
     }
 
@@ -123,16 +101,19 @@ public class ClientHandler2 implements Runnable{
                 Byte.toUnsignedInt(data[3]) + "." + Byte.toUnsignedInt(data[4]);
         String port = Integer.toString ((0xff00 & (data[5]<<8) ) | (255 & data[6]));
 
-
         //Checking case for when client tries to connect with same id
+        //  or when new client tries to connect with existing id
         Header header1 = new Header((byte)0x81);
         Packet sendPacket1 = new Packet(header1);
         if(client_information.containsKey(id)){
             if(ip.equals(client_information.get(id).get(1))){
-                client_information.remove(id);
+                //only socket_clients hashmap will need updating as client_information will remain the same
                 socket_clients.remove(id);
+                //This will terminate the before thread that was running for the same client that is reconnecting
+                clientObject.get(id).setStatus();
+                //This will change the obj reference from the old thread to this thread
+                clientObject.put(id, currentObj);
                 socket_clients.put(id, out);
-                client_information.put(id, new ArrayList<>(List.of(id, ip, port)));
             }else{
                 out.write(sendPacket1.bytePackage());
                 out.flush();
@@ -206,13 +187,22 @@ public class ClientHandler2 implements Runnable{
     }
 
 
-    private void relayMessage(Packet packet){
+    private void relayMessage(Packet packet) throws IOException {
+        byte[] data = packet.getData();
+        String toID = String.valueOf((byte)Byte.toUnsignedInt(data[0]));
+
+        Header header = new Header((byte)0x86, packet.getHeader().getLength());
+        Packet sendPacket = new Packet(header, data);
+        System.out.println(socket_clients);
+        System.out.println(toID);
+        socket_clients.get(toID).write(sendPacket.bytePackage());
+        socket_clients.get(toID).flush();
 
     }
 
     private void checkActive() throws IOException {
 
-        Header header = new Header((byte)0x88, (byte)1);
+        Header header = new Header((byte)0x88);
         Packet sendPacket = new Packet(header);
 
         for(String id : socket_clients.keySet()){
@@ -264,6 +254,7 @@ public class ClientHandler2 implements Runnable{
 
         //iterates through all the clients currently connected and tells them client disconnected
         for(DataOutputStream output : socket_clients.values()){
+            System.out.println("hello");
             output.write(sendPacket.bytePackage());
         }
         //This will set status to true, exiting the while loop in run() on the thread that's communicating
@@ -286,7 +277,7 @@ public class ClientHandler2 implements Runnable{
          and should be removed from the list so that a new client joining can be set as a coordinator
         But if the keySet size is not 1 then the coordinator can be assigned to someone else
          */
-        if(keySet.size()==1){
+        if(keySet.size()<=1){
             client_information.remove("coordinator");
         }else{
             this.coordinator = keySet.get(0);

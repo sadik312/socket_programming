@@ -1,11 +1,11 @@
-package com.client;
+package client;
 
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class CClient2 {
@@ -52,9 +52,9 @@ public class CClient2 {
 
         this.coordinatorCheck = new Thread( () -> {
             try {
-                Thread.sleep(5000);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
             while(isCoordinator){
 
@@ -123,7 +123,8 @@ public class CClient2 {
         while (!status) {
             try {
                 if(client.socket.getInputStream().available() > 2){
-                    Packet packet = new Packet(new byte[]{client.in.readByte(), client.in.readByte(), client.in.readByte()}, client.in);
+                    Packet packet = new Packet(
+                            new byte[]{client.in.readByte(), client.in.readByte(), client.in.readByte()}, client.in);
                     //System.out.println("opcode received: 0x" + Integer.toHexString(packet.getHeader().getOpcode()));
                     client.instructions(packet.getHeader().getOpcode(), packet);
                 }
@@ -180,13 +181,16 @@ public class CClient2 {
             case (byte)0x82 -> addClient(packet);
             case (byte)0x83 -> removeClient(packet);
             case (byte)0x84 -> updateCoordinator(packet);
-            case (byte)0x85 -> System.out.println("[Server] You are the first client");
+            case (byte)0x85 -> printFirstClient();
             case (byte)0x86 -> message(packet);
             case (byte)0x87 -> setCoordinator(packet);
             case (byte)0x88 -> respondActive();
             case (byte)0x89 -> acceptInitial(packet);
             default -> throw new IllegalStateException("Unexpected value: " + Byte.toUnsignedInt(opCode));
         }
+    }
+    private void printFirstClient(){
+        System.out.println("[Server] You are the first client");
     }
 
     private void setCoordinator(Packet packet) {
@@ -208,7 +212,10 @@ public class CClient2 {
 
     }
 
-    private void message(Packet packet) {
+    private void message(Packet packet) throws IOException {
+        ByteArrayOutputStream finalMessage = new ByteArrayOutputStream();
+        finalMessage.write(packet.getData());
+        System.out.println(finalMessage.toString());
     }
 
     /*
@@ -330,8 +337,41 @@ public class CClient2 {
 
     //Needs more logic to fully correct
 
-    private void initialiseMessage(){
+    private void initialiseMessage() throws IOException {
 
+        getMembers();
+        System.out.println("[Server] Enter the ID of the member to communicate with:");
+        System.out.print("> ");
+        String connectingClient = keyboard.next();
+        while(!connectingClient.equals("exit")){
+            if(clientInformation.containsKey(connectingClient)){
+                System.out.println("[Server] Connecting with client "+connectingClient);
+                break;
+            }else{
+                System.out.println("[Server] Client not found, enter again");
+                System.out.println("          or enter \"exit\" to exit");
+            }
+            System.out.print("> ");
+            connectingClient = keyboard.next();
+        }
+        System.out.print("> ");
+
+        ByteArrayOutputStream payload = new ByteArrayOutputStream();
+        Header header;
+        Packet packet;
+        String message;
+        payload.write((byte)Integer.parseInt(connectingClient));
+        message = keyboard.nextLine();
+        while(!message.equals("exit")){
+            payload.write(message.getBytes(StandardCharsets.UTF_8));
+            header = new Header((byte)0x02, (short)payload.size());
+            System.out.println();
+            packet = new Packet(header, payload.toByteArray());
+            out.write(packet.bytePackage());
+            out.flush();
+            payload.reset();
+            message = keyboard.nextLine();
+        }
     }
 
     private void checkActive(){
