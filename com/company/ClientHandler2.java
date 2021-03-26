@@ -148,8 +148,9 @@ public class ClientHandler2 implements Runnable{
             setCoordinator();
         }
 
-        System.out.println("[Server"+this.clientId+"] Client added");
+        System.out.println("[Server"+this.clientId+"] Client added with id +" + this.clientId);
         System.out.println(client_information.get(id));
+        System.out.println(client_information);
     }
 
 

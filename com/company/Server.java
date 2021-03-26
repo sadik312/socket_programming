@@ -15,6 +15,12 @@ public class Server {
     public static HashMap<String, DataOutputStream> socket_clients = new HashMap<>();
     public static HashMap<String, ClientHandler2> clientObject = new HashMap<>();
     public static void main(String[] args) throws IOException {
+        Server server = new Server();
+        server.hello();
+
+    }
+
+    public void hello() throws IOException {
         ServerSocket listener = new ServerSocket(9090);
         while(status){
             System.out.println("[Server] Server waiting for client connection...");
