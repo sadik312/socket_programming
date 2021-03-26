@@ -95,7 +95,7 @@ public class CClient2 {
 
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        CClient2 client = new CClient2("1", 9091, "192.168.0.27", "192.168.0.26", 9090);
+        CClient2 client = new CClient2("1", 9091, "192.168.0.27", "192.168.1.103", 9090);
         client.sendInitial();
 
 
@@ -332,6 +332,11 @@ public class CClient2 {
         System.out.println("-----Coordinator------");
         System.out.println("coordinator: " +
                 clientInformation.get("coordinator"));
+    }
+
+    //For testing purposes
+    public String getCoordinatorID() throws IOException{
+        return clientInformation.get("coordinator").get(0);
     }
 
 
