@@ -69,8 +69,7 @@ public class ClientHandler2 implements Runnable{
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println(client_information);
-        System.out.println("Terminating "+Thread.currentThread());
+
 
     }
 
@@ -193,8 +192,6 @@ public class ClientHandler2 implements Runnable{
 
         Header header = new Header((byte)0x86, packet.getHeader().getLength());
         Packet sendPacket = new Packet(header, data);
-        System.out.println(socket_clients);
-        System.out.println(toID);
         socket_clients.get(toID).write(sendPacket.bytePackage());
         socket_clients.get(toID).flush();
 

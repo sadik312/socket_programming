@@ -363,9 +363,9 @@ public class CClient2 {
         payload.write((byte)Integer.parseInt(connectingClient));
         message = keyboard.nextLine();
         while(!message.equals("exit")){
+            payload.write((byte)Integer.parseInt(connectingClient));
             payload.write(message.getBytes(StandardCharsets.UTF_8));
             header = new Header((byte)0x02, (short)payload.size());
-            System.out.println();
             packet = new Packet(header, payload.toByteArray());
             out.write(packet.bytePackage());
             out.flush();
