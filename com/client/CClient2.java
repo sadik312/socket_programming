@@ -219,15 +219,6 @@ public class CClient2 {
         System.out.println(finalMessage.toString());
     }
 
-    /*
-    private void respondActive() throws IOException {
-        Header header = new Header((byte)0x05);
-        Packet packet = new Packet(header);
-        out.write(packet.bytePackage());
-        out.flush();
-    }
-    */
-
     private void removeClient(Packet packet) {
         String id = String.valueOf(Byte.toUnsignedInt(packet.getData()[0]));
         clientInformation.remove(id);
@@ -239,7 +230,7 @@ public class CClient2 {
         clientInformation.replace("coordinator", clientInformation.get(id));
     }
 
-    private void addClient(Packet packet) throws IOException {
+    private void addClient(Packet packet) {
         byte[] data = packet.getData();
         String id = String.valueOf(Byte.toUnsignedInt(data[0]));
         String ip = Byte.toUnsignedInt(data[1]) + "." + Byte.toUnsignedInt(data[2]) + "." +
@@ -250,14 +241,7 @@ public class CClient2 {
         System.out.println("\n[Server] Client "+id+" added");
         System.out.println(clientInformation.get(id));
 
-        /*
-        //Responding to accepting client
-        Header header= new Header((byte)0x06, (byte)1);
-        Packet sendPacket = new Packet(header, new byte[]{data[0]});
-        out.write(packet.bytePackage());
-        out.flush();
-        */
-    }
+   }
 
     private void respondActive(){
         //useless
@@ -350,7 +334,7 @@ public class CClient2 {
                 break;
             }else{
                 System.out.println("[Server] Client not found, enter again");
-                System.out.println("          or enter \"exit\" to exit");
+                System.out.println("          Or enter \"exit\" to exit");
             }
             System.out.print("> ");
             connectingClient = keyboard.next();
