@@ -6,10 +6,9 @@ import org.junit.jupiter.api.Assertions;
 import java.io.IOException;
 import company.Server;
 
-import static company.Server.client_information;
+import static company.Server.*;
 
 public class ClientTests {
-    @Test
     public void checkCoordinator() throws IOException, InterruptedException {
         Server server = new Server();
 
@@ -18,5 +17,10 @@ public class ClientTests {
         String coordinatorId = client_information.get("coordinator").get(0);
 
         Assertions.assertEquals("1", coordinatorId);
+    }
+    @Test
+    public void messaging() throws IOException {
+        String test1Message = "hello";
+        String serverMsg = testingMessage;
     }
 }

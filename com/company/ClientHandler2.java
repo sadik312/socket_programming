@@ -41,7 +41,7 @@ public class ClientHandler2 implements Runnable{
 
             //letting client know they are the first client if they are the first client
             //System.out.println(client_information);
-            if(client_information.isEmpty()){ firstClient();}
+            if(client_information.size()<2){ firstClient();}
 
             sendClient();
 
@@ -197,6 +197,13 @@ public class ClientHandler2 implements Runnable{
         socket_clients.get(toID).flush();
 
     }
+//For testing the server side  for receiving the message
+    public void testMessageServer(Packet packet){
+        byte[] data = packet.getData();
+        String toID = String.valueOf((byte)Byte.toUnsignedInt(data[0]));
+        testingMessage = Arrays.toString(data);
+    }
+
 
     private void checkActive() throws IOException {
 
@@ -286,6 +293,7 @@ public class ClientHandler2 implements Runnable{
     }
 
     private void firstClient() throws IOException {
+        System.out.println("first client ");
         Header header = new Header((byte)0x85);
         Packet packet = new Packet(header);
         out.write(packet.bytePackage());

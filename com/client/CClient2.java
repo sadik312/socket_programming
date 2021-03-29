@@ -8,6 +8,8 @@ import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+
+
 public class CClient2 {
 
     private final String id;
@@ -81,25 +83,28 @@ public class CClient2 {
 
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public String getIp() {
-        return ip;
-    }
-
-
+    //Main function
     public static void main(String[] args) throws IOException, InterruptedException {
         //CClient2 client = new CClient2(args[0], Integer.parseInt(args[1]), args[2], args[3], Integer.parseInt(args[4]));
         CClient2 client = new CClient2("1", 9091, "192.168.0.27", "192.168.0.26", 9090);
+
+        //This is the initial packet sent to the server about its id, ip and port
         client.sendInitial();
 
 
+        //THis will catch the CTR+C disconnect
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run(){
+                try {
+                    client.disconnect();
+                } catch (IOException e) {
+                    //System.out.println("[client"+client.getId()+"] Disconnected unsafely" );
+                }
+            }
+                                             }
+        );
+
+        //This thread instantiation will run on the background which is the user display
         Thread backend = new Thread( () -> {
             System.out.println("Welcome!");
 
@@ -138,7 +143,23 @@ public class CClient2 {
         backend.join();
     }
 
+
+    public String getId() {
+        return id;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+
+
     private byte display(){
+
         System.out.println("""
                 ---------------------------
                 [1] Get Members
@@ -281,7 +302,7 @@ public class CClient2 {
             try {
                 coordinatorCheck.join();
             } catch (InterruptedException interruptedException) {
-                interruptedException.printStackTrace();
+                //interruptedException.printStackTrace();
             }
         }
 
@@ -320,8 +341,11 @@ public class CClient2 {
     }
 
 
-    //Needs more logic to fully correct
-
+    /**
+     * Used for sending message
+     * Initialises the command line to send they typed message to the specified client
+     * @throws IOException if the socket is broken to the server
+     */
     private void initialiseMessage() throws IOException {
 
         getMembers();
@@ -358,6 +382,18 @@ public class CClient2 {
             message = keyboard.nextLine();
         }
     }
+    //Testing for the sent message
+    public String testMessaging(String message) throws IOException {
+
+        ByteArrayOutputStream payload = new ByteArrayOutputStream();
+        Header header;
+        Packet packet;
+        payload.write(message.getBytes(StandardCharsets.UTF_8));
+        header = new Header((byte)0x02, (short) payload.size());
+        packet = new Packet(header, payload.toByteArray());
+        out.write(packet.bytePackage());
+        return payload.toString();
+  }
 
     private void checkActive(){
         coordinatorCheck.start();
