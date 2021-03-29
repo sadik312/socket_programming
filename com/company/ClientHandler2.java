@@ -197,13 +197,6 @@ public class ClientHandler2 implements Runnable{
         socket_clients.get(toID).flush();
 
     }
-//For testing the server side  for receiving the message
-    public void testMessageServer(Packet packet){
-        byte[] data = packet.getData();
-        String toID = String.valueOf((byte)Byte.toUnsignedInt(data[0]));
-        testingMessage = Arrays.toString(data);
-    }
-
 
     private void checkActive() throws IOException {
 
@@ -259,7 +252,6 @@ public class ClientHandler2 implements Runnable{
 
         //iterates through all the clients currently connected and tells them client disconnected
         for(DataOutputStream output : socket_clients.values()){
-            System.out.println("hello");
             output.write(sendPacket.bytePackage());
         }
         //This will set status to true, exiting the while loop in run() on the thread that's communicating
@@ -325,32 +317,6 @@ public class ClientHandler2 implements Runnable{
 
     private void setStatus(){
         this.status = true;
-    }
-
-
-    private void updateCoordinator() throws IOException {
-        //white methods to select new coordinator and start its CoordinatorCheck thread
-
-        ByteArrayOutputStream payload = new ByteArrayOutputStream();
-        String[] splitIp;
-        payload.write((byte)Integer.parseInt("0"));
-        payload.write((byte)
-                Integer.parseInt(client_information.get("coordinator").get(0)));
-        splitIp = client_information.get("coordinator").get(1).split("\\.");
-        payload.write((byte)Integer.parseInt(splitIp[0]));
-        payload.write((byte)Integer.parseInt(splitIp[1]));
-        payload.write((byte)Integer.parseInt(splitIp[2]));
-        payload.write((byte)Integer.parseInt(splitIp[3]));
-        payload.write((byte)((
-                (0xff & Integer.parseInt(client_information.get("coordinator").get(2)) >>8))));
-        payload.write((byte)(
-                (0xff & Integer.parseInt(client_information.get("coordinator").get(2)))));
-        Header header = new Header((byte)0x84, (byte)payload.size());
-        Packet sendPacket = new Packet(header, payload.toByteArray());
-
-        for(DataOutputStream output : socket_clients.values()){
-            output.write(sendPacket.bytePackage());
-        }
     }
 
 }

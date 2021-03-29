@@ -382,18 +382,6 @@ public class CClient2 {
             message = keyboard.nextLine();
         }
     }
-    //Testing for the sent message
-    public String testMessaging(String message) throws IOException {
-
-        ByteArrayOutputStream payload = new ByteArrayOutputStream();
-        Header header;
-        Packet packet;
-        payload.write(message.getBytes(StandardCharsets.UTF_8));
-        header = new Header((byte)0x02, (short) payload.size());
-        packet = new Packet(header, payload.toByteArray());
-        out.write(packet.bytePackage());
-        return payload.toString();
-  }
 
     private void checkActive(){
         coordinatorCheck.start();
