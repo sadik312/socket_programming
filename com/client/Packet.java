@@ -51,7 +51,6 @@ public class Packet {
 class Header{
     private final byte opcode;
     private final short length;
-    public final int headerLength = 3;
 
     //Constructor for making a header
     public Header(byte opcode, short length){

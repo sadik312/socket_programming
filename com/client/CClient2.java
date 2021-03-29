@@ -177,10 +177,12 @@ public class CClient2 {
             case 2 -> getCoordinator();
             case 3 -> initialiseMessage();
             case 4 -> disconnect();
+            default -> throw new IllegalStateException("[Client] Entry should be or be between 1 and 4: ");
         }
 
     }
 
+    //Sends the intial packet that will inform the server its id,ip and port connecting with
     public void sendInitial() throws IOException {
         byte[] payload = new byte[7];
         String[] splitIp = ip.split("\\.");
@@ -196,6 +198,8 @@ public class CClient2 {
         out.write(packet.bytePackage());
         out.flush();
     }
+
+
     //starting number of opcode hex is 8: Server to -> Client || if number 0 Client to -> Server
     private void instructions(byte opCode, Packet packet) throws IOException {
         switch (opCode) {
@@ -233,7 +237,7 @@ public class CClient2 {
 
 
     }
-
+    //Message received from another client
     private void message(Packet packet) throws IOException {
         ByteArrayOutputStream finalMessage = new ByteArrayOutputStream();
         finalMessage.write(packet.getData());
@@ -268,6 +272,8 @@ public class CClient2 {
         //useless
     }
 
+
+    //parses the intial packet that is sent form the server when first connected, will hold all the clients connected to the server
     private void acceptInitial(Packet packet){
         byte[] data = packet.getData();
         int size = Byte.toUnsignedInt(data[0]);

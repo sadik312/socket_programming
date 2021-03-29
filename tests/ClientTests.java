@@ -18,9 +18,4 @@ public class ClientTests {
 
         Assertions.assertEquals("1", coordinatorId);
     }
-    @Test
-    public void messaging() throws IOException {
-        String test1Message = "hello";
-        String serverMsg = testingMessage;
-    }
 }

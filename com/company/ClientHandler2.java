@@ -32,8 +32,9 @@ public class ClientHandler2 implements Runnable{
     @Override
     public void run() {
 
-        //This runs the first time the connects
+        //This runs the first time Client connects
         try {
+            //Reading initial first 3 bytes, this will always be the client connecting packet
             byte id = in.readByte();
             this.clientId = String.valueOf(Byte.toUnsignedInt(id));
             Packet packet = new Packet(new byte[]{id, in.readByte(), in.readByte()}, in);
@@ -43,6 +44,8 @@ public class ClientHandler2 implements Runnable{
             //System.out.println(client_information);
             if(client_information.size()<2){ firstClient();}
 
+
+            //Sending all the connected Client to the newly connected client
             sendClient();
 
             System.out.println("[Server"+this.clientId+"] Client connected with Id: " +
@@ -51,6 +54,8 @@ public class ClientHandler2 implements Runnable{
             e.printStackTrace();
         }
 
+
+        //this while loop listen to all the incoming packets to the server from the client
         while(!status){
             try {
                 if( in.available() > 2) {
@@ -61,6 +66,7 @@ public class ClientHandler2 implements Runnable{
                 e.printStackTrace();
             }
         }
+        //after the while loops exits after client disconnecting, this will close the socket and all the IO stream
         try {
             in.close();
             out.close();
@@ -81,6 +87,8 @@ public class ClientHandler2 implements Runnable{
         return this.coordinator;
     }
 
+
+    //will parse the incoming packet and perform corresponding function accordingly
     private void instructions(byte opCode, Packet packet) throws IOException {
         switch (opCode) {
             case (byte)0x01 -> addClient(packet); //00000001 00000000 0000001
@@ -91,7 +99,7 @@ public class ClientHandler2 implements Runnable{
         }
     }
 
-
+    //Adds new connected clinet
     private void addClient(Packet packet) throws IOException {
 
         byte[] data = packet.getData();
@@ -153,7 +161,7 @@ public class ClientHandler2 implements Runnable{
         System.out.println(client_information);
     }
 
-
+    //First packet sent by the server. All the connected clinets
     private void sendClient() throws IOException {
         ByteArrayOutputStream payload = new ByteArrayOutputStream();
         String[] splitIp;
@@ -186,7 +194,7 @@ public class ClientHandler2 implements Runnable{
 
     }
 
-
+    //Message from Client is routed to destination Client
     private void relayMessage(Packet packet) throws IOException {
         byte[] data = packet.getData();
         String toID = String.valueOf((byte)Byte.toUnsignedInt(data[0]));
@@ -198,8 +206,9 @@ public class ClientHandler2 implements Runnable{
 
     }
 
-    private void checkActive() throws IOException {
 
+    //will check who is still connected to the server upon coordinators request
+    private void checkActive() throws IOException {
         Header header = new Header((byte)0x88);
         Packet sendPacket = new Packet(header);
 
@@ -211,6 +220,8 @@ public class ClientHandler2 implements Runnable{
             }
         }
     }
+
+
     //safe disconnect
     private void disconnected(Packet packet) throws IOException {
 
@@ -241,7 +252,9 @@ public class ClientHandler2 implements Runnable{
 
 
     }
-    //overloading the disconnected method
+
+
+    //overloading the disconnected method for when disconnected client is found through other means
     private void disconnected(String id) throws IOException {
 
         client_information.remove(id);
@@ -264,7 +277,7 @@ public class ClientHandler2 implements Runnable{
 
     }
 
-
+    //assigns the first client in the client_information list
     private void assignCoordinator() throws IOException {
         this.coordinator=null;
         ArrayList<String> keySet = new ArrayList<>(client_information.keySet());
@@ -283,7 +296,7 @@ public class ClientHandler2 implements Runnable{
         }
 
     }
-
+    //packet to let the newly connected clinet know it is the first clinet
     private void firstClient() throws IOException {
         System.out.println("first client ");
         Header header = new Header((byte)0x85);
@@ -292,6 +305,8 @@ public class ClientHandler2 implements Runnable{
 
     }
 
+
+    //packet sent to client for setting a new coordinator
     private void setCoordinator() throws IOException {
         client_information.put("coordinator", client_information.get(this.coordinator));
         ByteArrayOutputStream payload = new ByteArrayOutputStream();
